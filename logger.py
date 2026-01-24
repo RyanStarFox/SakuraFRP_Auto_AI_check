@@ -14,7 +14,7 @@ class CheckinLogger:
         
         self.base_dir = base_dir
         self.logs_dir = base_dir / "logs"
-        self.logs_dir.mkdir(exist_ok=True)
+        self.logs_dir.mkdir(parents=True, exist_ok=True)
         
         # 获取今天的日志文件路径
         today = datetime.now().strftime("%Y-%m-%d")
