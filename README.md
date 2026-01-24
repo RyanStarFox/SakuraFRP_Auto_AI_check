@@ -13,6 +13,7 @@
 ├── run_scheduled.sh           # Linux定时执行脚本
 ├── env.example                 # 环境变量配置示例（需复制为.env）
 ├── requirements.txt           # Python依赖列表
+├── .venv/                     # uv虚拟环境目录（使用uv时自动生成）
 ├── account.txt                # 账号文件（必填：第1行用户名；第2行密码）
 ├── .env                       # 环境变量配置文件（需自行创建）
 ├── state.json                 # 登录状态缓存文件（自动生成与更新）
@@ -27,6 +28,24 @@
 ## 二、准备工作
 
 ### 1. 安装依赖
+
+#### 方式一：使用 uv（推荐，更快）
+
+```bash
+# 安装uv（如果尚未安装）
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# 创建虚拟环境并安装依赖
+uv venv
+source .venv/bin/activate  # Linux/Mac
+# 或 .venv\Scripts\activate  # Windows
+
+# 安装依赖
+uv pip install -r requirements.txt
+playwright install chromium
+```
+
+#### 方式二：使用传统 pip
 
 ```bash
 pip install -r requirements.txt
@@ -82,6 +101,20 @@ SCHEDULE_TIME=08:00
 ### 方式一：手动运行
 
 支持三种记录模式：
+
+**如果使用uv虚拟环境：**
+```bash
+# 激活虚拟环境
+source .venv/bin/activate  # Linux/Mac
+# 或 .venv\Scripts\activate  # Windows
+
+# 运行脚本
+uv run main.py --both
+# 或
+python main.py --both
+```
+
+**如果使用传统Python环境：**
 
 1. **仅记录截图**（不记录日志）：
 ```bash
@@ -151,6 +184,13 @@ crontab -e
 
 - **名称**：NATFRP 自动签到
 - **命令**（按你的实际路径替换）：
+  
+  **如果使用uv虚拟环境：**
+  ```bash
+  cd /ql/data/scripts/natfrp_checkin && .venv/bin/python main.py --both
+  ```
+  
+  **或使用传统Python：**
   ```bash
   python3 /ql/data/scripts/natfrp_checkin/main.py --both
   ```
@@ -186,6 +226,7 @@ crontab -e
 - Python 3.7 及以上版本
 - 需要安装的Python包见 `requirements.txt`
 - Linux系统需要安装cron（通常已预装）
+- （可选）推荐使用 [uv](https://github.com/astral-sh/uv) 进行依赖管理，速度更快
 
 ## 六、常见问题
 
