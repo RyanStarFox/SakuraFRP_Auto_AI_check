@@ -2,3 +2,4 @@ playwright>=1.40.0
 zhipuai>=2.0.0
 pillow>=10.0.0
 python-dotenv>=1.0.0
+sniffio>=1.3.0
