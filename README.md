@@ -11,7 +11,9 @@
 ├── ai_service.py              # AI调用模块
 ├── logger.py                  # 日志记录模块
 ├── test.py                    # 测试脚本
-├── run_scheduled.sh           # Linux定时执行脚本
+├── generate_random_time.sh    # 抽签脚本（生成随机时间）
+├── run_checkin.sh             # 执行脚本（检查并执行签到）
+├── run_scheduled.sh           # 旧版定时执行脚本（已废弃，保留用于兼容）
 ├── env.example                 # 环境变量配置示例（需复制为.env）
 ├── requirements.txt           # Python依赖列表
 ├── .venv/                     # uv虚拟环境目录（使用uv时自动生成）
@@ -145,24 +147,49 @@ python3 main.py
 crontab -e
 ```
 
-添加以下行（根据你的时间窗口调整）：
+添加以下两行（根据你的时间窗口调整）：
 ```bash
-# 假设SCHEDULE_TIME设置为08:00，则时间窗口为07:00-09:00
-# 在时间窗口内每分钟执行一次脚本
-* 7-9 * * * /path/to/SakuraFRP_Auto_AI_check/run_scheduled.sh >> /path/to/logs/cron.log 2>&1
+# 假设SCHEDULE_TIME设置为08:30，则时间窗口为08:00-09:00
+# 第一行：每天在时间窗口开始前30分钟抽签（生成随机时间）
+30 7 * * * /path/to/SakuraFRP_Auto_AI_check/generate_random_time.sh >> /path/to/logs/cron.log 2>&1
+
+# 第二行：在时间窗口内每分钟检查并执行（08:00-09:00）
+* 8-9 * * * /path/to/SakuraFRP_Auto_AI_check/run_checkin.sh >> /path/to/logs/cron.log 2>&1
 ```
 
 **说明**：
-- `* 7-9 * * *` 表示7点到9点之间每分钟执行一次
-- 如果 `SCHEDULE_TIME=08:00`，建议设置为 `* 7-9 * * *`（覆盖07:30-09:30的时间窗口）
+- 第一行：`30 7 * * *` 表示每天7:30执行抽签脚本，生成当天的随机执行时间
+- 第二行：`* 8-9 * * *` 表示8点到9点之间每分钟执行检查脚本
+- 如果 `SCHEDULE_TIME=08:30`，时间窗口为08:00-09:00，抽签在07:30执行
 - 脚本内部会检查当前时间是否匹配当天的随机时间，匹配才执行，否则静默退出
 
 #### 2. 脚本执行逻辑
 
-- 每天第一次运行时（在时间窗口内），脚本会生成当天的随机执行时间并保存到 `random_time_YYYY-MM-DD.txt`
-- 每次被cron调用时，脚本检查当前时间是否匹配当天的随机时间（精确到秒）
-- 如果匹配则执行签到脚本，否则静默退出
-- 这样确保每天只在随机时间执行一次，且时间在指定时间±30分钟内
+**抽签阶段（`generate_random_time.sh`）：**
+- 每天在时间窗口开始前30分钟执行（例如：如果签到时间是08:30，则在07:30执行）
+- 在指定时间±30分钟内随机生成一个秒级时间点（例如：08:15:23）
+- 将随机时间保存到 `random_time_YYYY-MM-DD.txt` 文件
+
+**执行阶段（`run_checkin.sh`）：**
+- 在时间窗口内每分钟被cron调用（例如：08:00-09:00每分钟执行一次）
+- 读取当天的随机时间文件
+- 检查当前时间是否匹配随机时间的分钟
+- **秒级精确控制**：如果分钟匹配，检查当前秒数：
+  - 如果当前秒数 < 目标秒数：使用 `sleep` 等待到目标秒数
+  - 如果当前秒数 ≥ 目标秒数：立即执行（可能cron执行有延迟）
+- 执行签到脚本，完成后创建锁文件防止重复执行
+
+**秒级精确控制原理：**
+- cron只能精确到分钟，在匹配分钟的第0秒执行脚本
+- 脚本内部获取当前秒数，如果小于目标秒数，使用 `sleep` 等待
+- 例如：随机时间是08:15:23，cron在08:15:00执行脚本，脚本sleep 23秒后在08:15:23执行签到
+
+#### 3. 优势
+
+- **逻辑清晰**：抽签和执行分离，职责明确
+- **资源占用低**：抽签只执行一次，执行检查次数减半（从120次降到60次）
+- **秒级精确**：通过sleep实现秒级精确控制
+- **易于维护**：两个脚本各司其职，便于调试和修改
 
 ### 方式三：在 QingLong（青龙）中使用
 
@@ -258,14 +285,20 @@ crontab -e
 
 6. **Linux定时执行不工作**
    - 确认cron服务正在运行：`systemctl status cron`（Debian/Ubuntu）或 `systemctl status crond`（CentOS/RHEL）；
-   - 确认 `run_scheduled.sh` 有执行权限：`chmod +x run_scheduled.sh`；
+   - 确认脚本有执行权限：`chmod +x generate_random_time.sh run_checkin.sh`；
    - 确认cron任务中的路径是绝对路径；
-   - 查看cron日志：`grep CRON /var/log/syslog`（Debian/Ubuntu）或 `grep CRON /var/log/cron`（CentOS/RHEL）。
+   - 查看cron日志：`grep CRON /var/log/syslog`（Debian/Ubuntu）或 `grep CRON /var/log/cron`（CentOS/RHEL）；
+   - 确认两个cron任务都已正确配置（抽签脚本和执行脚本）。
 
 7. **随机时间文件未生成**
    - 确认 `.env` 文件中 `SCHEDULE_TIME` 已正确配置；
-   - 确认cron任务的时间窗口覆盖了 `SCHEDULE_TIME ± 30分钟` 的范围；
-   - 手动运行一次 `run_scheduled.sh` 测试是否正常。
+   - 确认抽签脚本的cron任务已配置（在时间窗口开始前30分钟执行）；
+   - 手动运行一次 `generate_random_time.sh` 测试是否正常生成随机时间文件。
+
+8. **秒级精确控制不工作**
+   - 确认执行脚本 `run_checkin.sh` 中的sleep逻辑正常工作；
+   - 检查系统时间是否准确：`date`；
+   - 查看执行日志确认sleep时间是否正确。
 
 ## 七、测试
 

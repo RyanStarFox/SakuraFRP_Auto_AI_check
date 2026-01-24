@@ -105,7 +105,8 @@ def test_files():
         "ai_service.py": "AI服务模块",
         "logger.py": "日志模块",
         "requirements.txt": "依赖列表",
-        "run_scheduled.sh": "定时执行脚本",
+        "generate_random_time.sh": "抽签脚本",
+        "run_checkin.sh": "执行脚本",
         "env.example": "环境变量示例",
     }
     
@@ -252,35 +253,52 @@ def test_scheduled_script():
     """测试定时执行脚本"""
     print_test_header("定时执行脚本检查")
     
-    script_file = BASE_DIR / "run_scheduled.sh"
-    if not script_file.exists():
-        print_result(False, "run_scheduled.sh 不存在")
-        return False
+    scripts_to_check = {
+        "generate_random_time.sh": "抽签脚本",
+        "run_checkin.sh": "执行脚本",
+    }
     
-    # 检查文件权限
-    import stat
-    file_stat = script_file.stat()
-    is_executable = bool(file_stat.st_mode & stat.S_IEXEC)
+    all_passed = True
     
-    if is_executable:
-        print_result(True, "run_scheduled.sh 具有执行权限")
-    else:
-        print_result(False, "run_scheduled.sh 没有执行权限")
-        print("  提示: 可以运行 'chmod +x run_scheduled.sh' 添加执行权限")
+    for script_name, description in scripts_to_check.items():
+        script_file = BASE_DIR / script_name
+        if not script_file.exists():
+            print_result(False, f"{description} ({script_name}) 不存在")
+            all_passed = False
+            continue
+        
+        # 检查文件权限
+        import stat
+        file_stat = script_file.stat()
+        is_executable = bool(file_stat.st_mode & stat.S_IEXEC)
+        
+        if is_executable:
+            print_result(True, f"{description} ({script_name}) 具有执行权限")
+        else:
+            print_result(False, f"{description} ({script_name}) 没有执行权限")
+            print(f"  提示: 可以运行 'chmod +x {script_name}' 添加执行权限")
+            all_passed = False
+        
+        # 检查脚本内容
+        try:
+            content = script_file.read_text(encoding="utf-8")
+            if script_name == "generate_random_time.sh":
+                if "SCHEDULE_TIME" in content:
+                    print_result(True, f"{description} 包含 SCHEDULE_TIME 配置检查")
+                if "random_time" in content:
+                    print_result(True, f"{description} 包含随机时间生成逻辑")
+            elif script_name == "run_checkin.sh":
+                if "random_time" in content:
+                    print_result(True, f"{description} 包含随机时间读取逻辑")
+                if "sleep" in content:
+                    print_result(True, f"{description} 包含秒级精确控制逻辑")
+                if ".venv" in content or "uv run" in content:
+                    print_result(True, f"{description} 支持uv虚拟环境")
+        except Exception as e:
+            print_result(False, f"读取脚本文件 {script_name} 失败: {e}")
+            all_passed = False
     
-    # 检查脚本内容
-    try:
-        content = script_file.read_text(encoding="utf-8")
-        if "SCHEDULE_TIME" in content:
-            print_result(True, "脚本包含 SCHEDULE_TIME 配置检查")
-        if "random_time" in content:
-            print_result(True, "脚本包含随机时间生成逻辑")
-        if ".venv" in content or "uv run" in content:
-            print_result(True, "脚本支持uv虚拟环境")
-    except Exception as e:
-        print_result(False, f"读取脚本文件失败: {e}")
-    
-    return True
+    return all_passed
 
 def test_dependencies():
     """测试依赖安装"""
