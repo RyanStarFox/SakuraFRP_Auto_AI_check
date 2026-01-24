@@ -93,10 +93,18 @@ if [ "$CURRENT_HOUR" = "$RANDOM_HOUR" ] && [ "$CURRENT_MIN" = "$RANDOM_MIN" ]; t
     echo "[INFO] 当前时间 $CURRENT_TIME_FULL 匹配随机时间 $RANDOM_TIME，开始执行签到脚本..."
     
     # 执行Python脚本
-    # 使用python3，如果不存在则尝试python
-    if command -v python3 &> /dev/null; then
+    # 优先使用uv虚拟环境，如果存在
+    if [ -d ".venv" ] && [ -f ".venv/bin/python" ]; then
+        echo "[INFO] 使用uv虚拟环境执行脚本"
+        .venv/bin/python main.py --both
+    elif command -v uv &> /dev/null; then
+        echo "[INFO] 使用uv run执行脚本"
+        uv run main.py --both
+    elif command -v python3 &> /dev/null; then
+        echo "[INFO] 使用python3执行脚本"
         python3 main.py --both
     elif command -v python &> /dev/null; then
+        echo "[INFO] 使用python执行脚本"
         python main.py --both
     else
         echo "[ERROR] 未找到Python解释器"
