@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 """
 测试脚本 - 检查项目运行情况
-运行方式: python3 test.py
+运行方式: 
+  python3 test.py          # 使用系统Python
+  uv run test.py           # 使用uv虚拟环境（推荐）
+  .venv/bin/python test.py # 直接使用虚拟环境Python
 """
 
 import sys
@@ -11,6 +14,28 @@ from pathlib import Path
 # 添加项目根目录到路径
 BASE_DIR = Path(__file__).resolve().parent
 sys.path.insert(0, str(BASE_DIR))
+
+def check_python_environment():
+    """检查Python环境并给出提示"""
+    python_path = Path(sys.executable)
+    venv_path = BASE_DIR / ".venv"
+    
+    # 检查是否在虚拟环境中
+    is_in_venv = ".venv" in str(python_path) or "venv" in str(python_path)
+    
+    # 检查是否存在.venv目录
+    venv_exists = venv_path.exists()
+    
+    if venv_exists and not is_in_venv:
+        print("\n⚠️  检测到 .venv 目录，但当前未使用虚拟环境！")
+        print(f"   当前Python路径: {python_path}")
+        print(f"   建议使用以下方式运行测试：")
+        print(f"   - uv run test.py")
+        print(f"   - .venv/bin/python test.py")
+        print(f"   - source .venv/bin/activate && python test.py")
+        print()
+    
+    return is_in_venv, venv_exists
 
 def print_test_header(test_name):
     """打印测试标题"""
@@ -261,16 +286,47 @@ def test_dependencies():
     """测试依赖安装"""
     print_test_header("依赖检查")
     
+    venv_path = BASE_DIR / ".venv"
+    venv_exists = venv_path.exists()
+    python_path = Path(sys.executable)
+    is_in_venv = ".venv" in str(python_path) or "venv" in str(python_path)
+    
+    # 如果存在.venv但不在虚拟环境中，给出提示
+    if venv_exists and not is_in_venv:
+        print("⚠️  检测到依赖可能安装在虚拟环境中，但当前使用系统Python")
+        print("   建议使用 'uv run test.py' 或激活虚拟环境后运行")
+        print()
+    
     try:
         import subprocess
-        result = subprocess.run(
-            [sys.executable, "-m", "pip", "list"],
-            capture_output=True,
-            text=True,
-            timeout=10
-        )
         
-        installed_packages = result.stdout.lower()
+        # 尝试使用uv pip list（如果可用）
+        use_uv = False
+        if venv_exists:
+            try:
+                result = subprocess.run(
+                    ["uv", "pip", "list"],
+                    capture_output=True,
+                    text=True,
+                    timeout=10,
+                    cwd=str(BASE_DIR)
+                )
+                if result.returncode == 0:
+                    installed_packages = result.stdout.lower()
+                    use_uv = True
+                    print_result(True, "使用uv pip list检查依赖")
+            except (FileNotFoundError, subprocess.TimeoutExpired):
+                pass
+        
+        # 如果uv不可用，使用标准pip
+        if not use_uv:
+            result = subprocess.run(
+                [sys.executable, "-m", "pip", "list"],
+                capture_output=True,
+                text=True,
+                timeout=10
+            )
+            installed_packages = result.stdout.lower()
         
         required_packages = {
             "playwright": "playwright",
@@ -285,6 +341,8 @@ def test_dependencies():
                 print_result(True, f"{package_name} 已安装")
             else:
                 print_result(False, f"{package_name} 未安装")
+                if venv_exists and not is_in_venv:
+                    print(f"   提示: 如果使用uv虚拟环境，请运行 'uv run test.py'")
                 all_installed = False
         
         return all_installed
@@ -297,6 +355,22 @@ def main():
     print("\n" + "="*60)
     print("SakuraFRP 自动签到脚本 - 测试套件")
     print("="*60)
+    
+    # 检查Python环境
+    is_in_venv, venv_exists = check_python_environment()
+    
+    # 显示当前Python信息
+    python_version = sys.version.split()[0]
+    python_path = sys.executable
+    print(f"\n当前Python环境:")
+    print(f"  Python版本: {python_version}")
+    print(f"  Python路径: {python_path}")
+    if is_in_venv:
+        print(f"  环境类型: 虚拟环境")
+    elif venv_exists:
+        print(f"  环境类型: 系统Python（检测到.venv但未使用）")
+    else:
+        print(f"  环境类型: 系统Python")
     
     tests = [
         ("模块导入", test_imports),

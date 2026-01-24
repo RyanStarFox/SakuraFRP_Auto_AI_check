@@ -271,9 +271,23 @@ crontab -e
 
 运行测试脚本检查项目配置是否正确：
 
+**如果使用uv虚拟环境（推荐）：**
+```bash
+uv run test.py
+```
+
+**如果使用系统Python：**
 ```bash
 python3 test.py
 ```
+
+**如果已激活虚拟环境：**
+```bash
+source .venv/bin/activate
+python test.py
+```
+
+> **注意**：如果在uv虚拟环境中安装了依赖，请使用 `uv run test.py` 运行测试，否则会提示找不到库。
 
 测试脚本会检查：
 - ✓ 模块导入是否正常
