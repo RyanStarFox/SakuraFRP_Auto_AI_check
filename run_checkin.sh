@@ -7,6 +7,10 @@
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
+# 确保logs目录存在
+LOGS_DIR="$SCRIPT_DIR/logs"
+mkdir -p "$LOGS_DIR"
+
 # 加载.env文件
 if [ -f .env ]; then
     export $(cat .env | grep -v '^#' | xargs)
