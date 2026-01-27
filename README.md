@@ -45,15 +45,29 @@ source .venv/bin/activate  # Linux/Mac
 
 # 安装依赖
 uv pip install -r requirements.txt
+
+# ⚠️ 重要：安装Playwright浏览器（必须执行）
+# 方式1：使用uv run（推荐）
+uv run playwright install chromium
+
+# 方式2：激活虚拟环境后执行
+source .venv/bin/activate
 playwright install chromium
+
+# 方式3：使用Python模块方式
+uv run python -m playwright install chromium
 ```
 
 #### 方式二：使用传统 pip
 
 ```bash
 pip install -r requirements.txt
+
+# ⚠️ 重要：安装Playwright浏览器（必须执行）
 playwright install chromium
 ```
+
+> **注意**：安装完Python依赖后，**必须**运行 `playwright install chromium` 来下载浏览器，否则运行脚本时会报错 `Executable doesn't exist`。
 
 ### 2. 创建账号文件 `account.txt`
 
@@ -258,44 +272,56 @@ crontab -e
 
 ## 六、常见问题
 
-1. **提示账号文件不存在或格式错误**
+1. **提示 `Executable doesn't exist` 或 `BrowserType.launch` 错误**
+   - 这是因为没有安装Playwright浏览器；
+   - **如果使用uv虚拟环境**：
+     - 运行 `uv run playwright install chromium`（推荐）
+     - 或 `uv run python -m playwright install chromium`
+   - **如果使用传统pip虚拟环境**：
+     - 激活虚拟环境：`source .venv/bin/activate`
+     - 运行 `playwright install chromium`
+   - **如果使用系统Python**：
+     - 直接运行 `playwright install chromium`
+   - 安装完成后重新运行脚本即可。
+
+2. **提示账号文件不存在或格式错误**
    - 确认 `account.txt` 与 `main.py` 在同一目录；
    - 确认文件编码为 `UTF-8`，且只有两行：第一行用户名，第二行密码；
    - 不要包含多余空行或空格。
 
-2. **提示未找到ZHIPU_API_KEY环境变量**
+3. **提示未找到ZHIPU_API_KEY环境变量**
    - 确认已创建 `.env` 文件（复制自 `.env.example`）；
    - 确认 `.env` 文件中 `ZHIPU_API_KEY` 已正确配置；
    - 确认 `.env` 文件与 `main.py` 在同一目录。
 
-3. **一直提示登录状态过期**
+4. **一直提示登录状态过期**
    - 删除同目录下旧的 `state.json` 后重跑；
    - 确认账号密码正确；
    - 网络/地区问题可能导致访问异常，可稍后再试。
 
-4. **出现滑块但始终无法通过**
+5. **出现滑块但始终无法通过**
    - 目标站点的风控策略可能调整；
    - 可适当增加重试次数，或更换执行时间段；
    - 若长时间失败，建议手动登录一次，让站点信任度恢复。
 
-5. **成功了但没有截图**
+6. **成功了但没有截图**
    - 程序以出现"今天已经签到过啦"的提示为成功判据；
    - 如果站点文案发生变化，可修改 `ALREADY_SIGNED_TEXT`；
    - 截图保存路径由 `SUCCESS_SCREENSHOT` 控制（默认 `checkin.png`）。
 
-6. **Linux定时执行不工作**
+7. **Linux定时执行不工作**
    - 确认cron服务正在运行：`systemctl status cron`（Debian/Ubuntu）或 `systemctl status crond`（CentOS/RHEL）；
    - 确认脚本有执行权限：`chmod +x generate_random_time.sh run_checkin.sh`；
    - 确认cron任务中的路径是绝对路径；
    - 查看cron日志：`grep CRON /var/log/syslog`（Debian/Ubuntu）或 `grep CRON /var/log/cron`（CentOS/RHEL）；
    - 确认两个cron任务都已正确配置（抽签脚本和执行脚本）。
 
-7. **随机时间文件未生成**
+8. **随机时间文件未生成**
    - 确认 `.env` 文件中 `SCHEDULE_TIME` 已正确配置；
    - 确认抽签脚本的cron任务已配置（在时间窗口开始前30分钟执行）；
    - 手动运行一次 `generate_random_time.sh` 测试是否正常生成随机时间文件。
 
-8. **秒级精确控制不工作**
+9. **秒级精确控制不工作**
    - 确认执行脚本 `run_checkin.sh` 中的sleep逻辑正常工作；
    - 检查系统时间是否准确：`date`；
    - 查看执行日志确认sleep时间是否正确。

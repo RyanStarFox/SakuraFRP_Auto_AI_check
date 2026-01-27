@@ -1,0 +1,75 @@
+# ========== 敏感信息 ==========
+# 环境变量配置（包含API密钥）
+.env
+
+# 账号信息
+account.txt
+
+# 登录状态缓存（包含cookies）
+state.json
+
+# ========== 运行时生成的文件 ==========
+# 签到截图
+checkin.png
+
+# 日志目录
+logs/
+*.log
+
+# 随机时间文件（定时执行生成）
+random_time_*.txt
+
+# 执行锁文件（定时执行生成）
+.executed_*.lock
+
+# ========== Python相关 ==========
+# Python缓存文件
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# 虚拟环境
+.venv/
+venv/
+ENV/
+env/
+
+# 测试相关
+.pytest_cache/
+.coverage
+htmlcov/
+
+# ========== 系统文件 ==========
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Linux
+*~
+
+# ========== IDE相关 ==========
+# VSCode
+.vscode/
+*.code-workspace
+
+# PyCharm
+.idea/
+*.iml
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# ========== 其他 ==========
+# 临时文件
+*.tmp
+*.bak
+*.swp
+*~

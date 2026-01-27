@@ -28,6 +28,10 @@ fi
 # 解析SCHEDULE_TIME（格式：HH:MM）
 IFS=':' read -r SCHEDULE_HOUR SCHEDULE_MINUTE <<< "$SCHEDULE_TIME"
 
+# 强制使用10进制（避免08被解析为八进制）
+SCHEDULE_HOUR=$((10#$SCHEDULE_HOUR))
+SCHEDULE_MINUTE=$((10#$SCHEDULE_MINUTE))
+
 # 获取当前日期（YYYY-MM-DD格式）
 CURRENT_DATE=$(date +%Y-%m-%d)
 
@@ -42,6 +46,7 @@ fi
 
 # 生成随机执行时间
 echo "[INFO] 正在生成当天的随机执行时间..."
+echo "[DEBUG] SCHEDULE_TIME解析: 小时=$SCHEDULE_HOUR, 分钟=$SCHEDULE_MINUTE"
 
 # 计算时间范围（±30分钟）
 # 将时间转换为分钟数

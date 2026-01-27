@@ -37,10 +37,20 @@ RANDOM_TIME=$(cat "$RANDOM_TIME_FILE" | tr -d '\n\r ')
 # 解析随机时间（HH:MM:SS格式）
 IFS=':' read -r RANDOM_HOUR RANDOM_MIN RANDOM_SEC <<< "$RANDOM_TIME"
 
+# 强制使用10进制（避免08被解析为八进制）
+RANDOM_HOUR=$((10#$RANDOM_HOUR))
+RANDOM_MIN=$((10#$RANDOM_MIN))
+RANDOM_SEC=$((10#$RANDOM_SEC))
+
 # 获取当前时间
 CURRENT_HOUR=$(date +%H)
 CURRENT_MIN=$(date +%M)
 CURRENT_SEC=$(date +%S)
+
+# 强制使用10进制
+CURRENT_HOUR=$((10#$CURRENT_HOUR))
+CURRENT_MIN=$((10#$CURRENT_MIN))
+CURRENT_SEC=$((10#$CURRENT_SEC))
 
 # 检查是否已经执行过（避免重复执行）
 LOCK_FILE=".executed_${CURRENT_DATE}.lock"

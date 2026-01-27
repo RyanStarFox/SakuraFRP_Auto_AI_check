@@ -5,6 +5,7 @@ import random
 import re
 import argparse
 from pathlib import Path
+from datetime import datetime, timedelta
 from PIL import Image
 from playwright.sync_api import sync_playwright
 from ai_service import AIService
@@ -38,6 +39,40 @@ def load_username_password(path: Path):
     if len(lines) < 2:
         raise ValueError("account.txt 格式错误：需两行分别存放用户名和密码")
     return lines[0], lines[1]
+
+def clean_old_logs(base_dir: Path, days: int = 30):
+    """清理指定天数前的日志文件"""
+    logs_dir = base_dir / "logs"
+    if not logs_dir.exists():
+        return
+    
+    # 计算截止日期（30天前）
+    cutoff_date = datetime.now() - timedelta(days=days)
+    
+    # 遍历logs目录下的所有文件
+    deleted_count = 0
+    for log_file in logs_dir.iterdir():
+        if not log_file.is_file():
+            continue
+        
+        # 检查是否是日志文件（格式：checkin_YYYY-MM-DD.log）
+        if log_file.name.startswith("checkin_") and log_file.name.endswith(".log"):
+            try:
+                # 从文件名提取日期（checkin_YYYY-MM-DD.log）
+                date_str = log_file.name.replace("checkin_", "").replace(".log", "")
+                file_date = datetime.strptime(date_str, "%Y-%m-%d")
+                
+                # 如果文件日期早于截止日期，删除文件
+                if file_date < cutoff_date:
+                    log_file.unlink()
+                    deleted_count += 1
+                    print(f"[INFO] 已删除旧日志文件: {log_file.name} (日期: {date_str})")
+            except ValueError:
+                # 如果文件名格式不正确，跳过
+                continue
+    
+    if deleted_count > 0:
+        print(f"[INFO] 清理完成，共删除 {deleted_count} 个30天前的日志文件")
 
 # ---------------- 验证码核心处理 ----------------
 def solve_geetest_multistep(page, ai_service):
@@ -143,6 +178,9 @@ def main():
         # 默认或--both都是两者都要
         save_screenshot = True
         save_log = True
+    
+    # 清理30天前的旧日志
+    clean_old_logs(BASE_DIR, days=30)
     
     # 初始化日志记录器（如果需要）
     logger = None
