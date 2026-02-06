@@ -1154,7 +1154,7 @@ def main():
                     # 保存点击前的页面状态（用于对比）
                     try:
                         before_screenshot = BASE_DIR / "before_click.png"
-                        page.screenshot(path=before_screenshot)
+                        page.screenshot(path=str(before_screenshot))
                         print(f"[DEBUG] 点击前页面截图已保存: {before_screenshot}")
                     except:
                         pass
@@ -1217,7 +1217,7 @@ def main():
                     # 保存点击后的页面状态
                     try:
                         after_screenshot = BASE_DIR / "after_click.png"
-                        page.screenshot(path=after_screenshot)
+                        page.screenshot(path=str(after_screenshot))
                         print(f"[DEBUG] 点击后页面截图已保存: {after_screenshot}")
                     except:
                         pass
@@ -1355,10 +1355,10 @@ def main():
             if success_loc:
                 try:
                     # 尝试截取父级区域，让截图更美观
-                    success_loc.locator(f"xpath=ancestor::*[{SIGNED_ANCESTOR_LEVELS}]").first.screenshot(path=SUCCESS_SCREENSHOT)
+                    success_loc.locator(f"xpath=ancestor::*[{SIGNED_ANCESTOR_LEVELS}]").first.screenshot(path=str(SUCCESS_SCREENSHOT))
                     print(f"[INFO] 截图已保存: {SUCCESS_SCREENSHOT}")
                 except:
-                    page.screenshot(path=SUCCESS_SCREENSHOT)
+                    page.screenshot(path=str(SUCCESS_SCREENSHOT))
                     print(f"[INFO] 截图已保存: {SUCCESS_SCREENSHOT}")
         
         print("[INFO] 脚本运行结束。")

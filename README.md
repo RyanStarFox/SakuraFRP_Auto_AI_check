@@ -317,7 +317,7 @@ crontab -e
    - 确认已创建 `.env` 文件（复制自 `env.example`）；
    - 确认 `.env` 文件中 `ZHIPU_API_KEY` 已正确配置；
    - 确认 `.env` 文件与 `main.py` 在同一目录；
-   - **运行 `python3 test_zhipu_api.py` 测试 API 配置是否正确**；
+   - **运行 `python3 test.py` 测试 API 配置是否正确**；
    - 检查 API Key 是否有效，免费配额是否已用完。
 
 4. **一直提示登录状态过期**

@@ -43,7 +43,7 @@ class AIService:
                     "role": "user",
                     "content": [
                         {"type": "text", "text": prompt},
-                        {"type": "image_url", "image_url": {"url": base64_data}}
+                        {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{base64_data}"}}
                     ]
                 }]
             )
@@ -110,8 +110,8 @@ class AIService:
                         "role": "user",
                         "content": [
                             {"type": "text", "text": prompt},
-                            {"type": "image_url", "image_url": {"url": base64_bg}},
-                            {"type": "image_url", "image_url": {"url": base64_slice}}
+                            {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{base64_bg}"}},
+                            {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{base64_slice}"}}
                         ]
                     }]
                 )
@@ -148,7 +148,7 @@ class AIService:
                         "role": "user",
                         "content": [
                             {"type": "text", "text": prompt},
-                            {"type": "image_url", "image_url": {"url": base64_bg}}
+                            {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{base64_bg}"}}
                         ]
                     }]
                 )
