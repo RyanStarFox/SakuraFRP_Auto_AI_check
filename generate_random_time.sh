@@ -35,12 +35,13 @@ SCHEDULE_MINUTE=$((10#$SCHEDULE_MINUTE))
 # 获取当前日期（YYYY-MM-DD格式）
 CURRENT_DATE=$(date +%Y-%m-%d)
 
-# 随机时间文件路径
+# 随机时间文件路径（每天覆盖，不创建新文件）
 RANDOM_TIME_FILE="random_time_${CURRENT_DATE}.txt"
 
-# 如果已存在当天的随机时间文件，先删除（重新抽签）
+# 如果已存在当天的随机时间文件，先删除（确保覆盖）
+# 注意：即使不删除，使用 > 重定向也会覆盖文件内容
 if [ -f "$RANDOM_TIME_FILE" ]; then
-    echo "[INFO] 发现已存在的随机时间文件，将重新生成..."
+    echo "[INFO] 发现已存在的随机时间文件，将覆盖..."
     rm "$RANDOM_TIME_FILE"
 fi
 
@@ -75,7 +76,8 @@ RANDOM_MIN=$((RANDOM_MINUTES % 60))
 # 格式化时间（确保两位数）
 RANDOM_TIME=$(printf "%02d:%02d:%02d" $RANDOM_HOUR $RANDOM_MIN $RANDOM_SECONDS)
 
-# 保存到文件
+# 保存到文件（覆盖模式，每天只保留一个文件）
 echo "$RANDOM_TIME" > "$RANDOM_TIME_FILE"
 echo "[INFO] 当天的随机执行时间已生成: $RANDOM_TIME"
 echo "[INFO] 签到将在 $RANDOM_TIME 执行"
+echo "[INFO] 文件已保存/覆盖: $RANDOM_TIME_FILE"

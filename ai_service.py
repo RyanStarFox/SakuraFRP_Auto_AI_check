@@ -85,3 +85,85 @@ class AIService:
         except Exception as e:
             print(f"[ERROR] 语义匹配失败: {e}")
             return []
+    
+    def identify_slider_gap(self, bg_img_bytes, slice_img_bytes=None):
+        """识别滑块验证码的缺口位置"""
+        if slice_img_bytes:
+            # 如果有缺口图，使用对比识别
+            prompt = """这是滑块验证码的两张图片：
+1. 第一张是完整的背景图
+2. 第二张是带缺口的拼图块
+
+请识别出缺口在背景图中的水平位置（x坐标，单位：像素）。
+缺口位置是指拼图块应该放置的位置，即背景图中缺失的那部分对应的x坐标。
+
+只返回一个数字，表示缺口位置的x坐标（像素值），不要有任何其他文字或解释。
+例如：如果缺口在100像素的位置，只返回：100"""
+            
+            base64_bg = base64.b64encode(bg_img_bytes).decode('utf-8')
+            base64_slice = base64.b64encode(slice_img_bytes).decode('utf-8')
+            
+            try:
+                response = self.client.chat.completions.create(
+                    model=self.model_vision,
+                    messages=[{
+                        "role": "user",
+                        "content": [
+                            {"type": "text", "text": prompt},
+                            {"type": "image_url", "image_url": {"url": base64_bg}},
+                            {"type": "image_url", "image_url": {"url": base64_slice}}
+                        ]
+                    }]
+                )
+                result_text = response.choices[0].message.content.strip()
+                print(f"[AI] 滑块缺口识别结果（原始）: {result_text}")
+                
+                # 提取数字
+                numbers = re.findall(r'\d+', result_text)
+                if numbers:
+                    gap_pos = int(numbers[0])
+                    print(f"[AI] 识别到的缺口位置: {gap_pos}px")
+                    return gap_pos
+                else:
+                    print(f"[WARNING] 无法从AI结果中提取数字: {result_text}")
+                    return 0
+            except Exception as e:
+                print(f"[ERROR] AI识别滑块缺口失败: {e}")
+                return 0
+        else:
+            # 如果只有背景图，尝试识别缺口特征
+            prompt = """这是滑块验证码的背景图。请识别出图片中缺口的位置。
+缺口通常是一个不规则的形状，与周围有明显的边缘差异。
+
+请识别出缺口在图片中的水平位置（x坐标，单位：像素）。
+只返回一个数字，表示缺口位置的x坐标（像素值），不要有任何其他文字或解释。
+例如：如果缺口在100像素的位置，只返回：100"""
+            
+            base64_bg = base64.b64encode(bg_img_bytes).decode('utf-8')
+            
+            try:
+                response = self.client.chat.completions.create(
+                    model=self.model_vision,
+                    messages=[{
+                        "role": "user",
+                        "content": [
+                            {"type": "text", "text": prompt},
+                            {"type": "image_url", "image_url": {"url": base64_bg}}
+                        ]
+                    }]
+                )
+                result_text = response.choices[0].message.content.strip()
+                print(f"[AI] 滑块缺口识别结果（原始）: {result_text}")
+                
+                # 提取数字
+                numbers = re.findall(r'\d+', result_text)
+                if numbers:
+                    gap_pos = int(numbers[0])
+                    print(f"[AI] 识别到的缺口位置: {gap_pos}px")
+                    return gap_pos
+                else:
+                    print(f"[WARNING] 无法从AI结果中提取数字: {result_text}")
+                    return 0
+            except Exception as e:
+                print(f"[ERROR] AI识别滑块缺口失败: {e}")
+                return 0

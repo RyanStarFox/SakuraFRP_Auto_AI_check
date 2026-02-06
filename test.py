@@ -249,6 +249,156 @@ def test_ai_service():
         traceback.print_exc()
         return False
 
+def test_zhipu_api():
+    """测试智谱AI API配置和可用性（实际调用API）"""
+    print_test_header("智谱AI API 测试")
+    
+    # 检查 .env 文件
+    env_file = BASE_DIR / ".env"
+    if not env_file.exists():
+        print_result(False, "未找到 .env 文件，跳过API测试")
+        print("  提示: 请复制 env.example 为 .env 并配置")
+        return True  # 不算作失败，只是跳过
+    
+    from dotenv import load_dotenv
+    load_dotenv(env_file)
+    
+    # 读取配置
+    api_key = os.getenv("ZHIPU_API_KEY")
+    model_vision = os.getenv("ZHIPU_MODEL_VISION", "glm-4v-flash")
+    model_text = os.getenv("ZHIPU_MODEL_TEXT", "glm-4-flash")
+    
+    # 显示配置信息（隐藏敏感信息）
+    if api_key and len(api_key) > 30:
+        masked_key = f"{api_key[:20]}...{api_key[-10:]}"
+    else:
+        masked_key = "未配置"
+    
+    print(f"  配置信息:")
+    print(f"    API Key: {masked_key}")
+    print(f"    视觉模型: {model_vision}")
+    print(f"    文本模型: {model_text}")
+    
+    # 检查 API Key
+    if not api_key or api_key == "your_api_key_here":
+        print_result(False, "ZHIPU_API_KEY 未配置或使用了默认值")
+        print("  提示: 请前往 https://open.bigmodel.cn/ 获取 API Key")
+        return True  # 不算作失败，只是跳过
+    
+    # 检查依赖库
+    try:
+        from zhipuai import ZhipuAI
+        print_result(True, "zhipuai 库已安装")
+    except ImportError:
+        print_result(False, "未安装 zhipuai 库")
+        print("  提示: 请运行 pip install zhipuai>=2.0.0")
+        return False
+    
+    try:
+        from PIL import Image
+        import io
+        print_result(True, "Pillow 库已安装")
+    except ImportError:
+        print_result(False, "未安装 Pillow 库")
+        print("  提示: 请运行 pip install pillow>=10.0.0")
+        return False
+    
+    # 初始化客户端
+    try:
+        client = ZhipuAI(api_key=api_key)
+        print_result(True, "客户端初始化成功")
+    except Exception as e:
+        print_result(False, f"客户端初始化失败: {e}")
+        return False
+    
+    # 测试文本模型
+    print(f"\n  测试文本模型: {model_text}")
+    try:
+        response = client.chat.completions.create(
+            model=model_text,
+            messages=[
+                {"role": "user", "content": "你好，请回复'测试成功'"}
+            ],
+            timeout=10
+        )
+        
+        if response and response.choices:
+            content = response.choices[0].message.content
+            print_result(True, f"文本模型测试成功 - {content}")
+        else:
+            print_result(False, "文本模型返回了空响应")
+            return False
+            
+    except Exception as e:
+        print_result(False, f"文本模型测试失败: {e}")
+        if "401" in str(e) or "authentication" in str(e).lower():
+            print("  提示: API Key 可能无效或已过期")
+        elif "model" in str(e).lower():
+            print("  提示: 模型名称可能不正确")
+        elif "quota" in str(e).lower() or "balance" in str(e).lower():
+            print("  提示: API 配额可能已用完")
+        return False
+    
+    # 测试视觉模型
+    print(f"\n  测试视觉模型: {model_vision}")
+    try:
+        # 创建一个简单的测试图片（100x100 白色背景，中间有黑色方块）
+        test_image = Image.new('RGB', (100, 100), color='white')
+        pixels = test_image.load()
+        for i in range(30, 70):
+            for j in range(30, 70):
+                pixels[i, j] = (0, 0, 0)  # 黑色方块
+        
+        # 转换为 base64
+        import base64
+        buffer = io.BytesIO()
+        test_image.save(buffer, format='PNG')
+        img_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+        
+        response = client.chat.completions.create(
+            model=model_vision,
+            messages=[
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "这是一张测试图片，请简单描述你看到了什么"
+                        },
+                        {
+                            "type": "image_url",
+                            "image_url": {
+                                "url": f"data:image/png;base64,{img_base64}"
+                            }
+                        }
+                    ]
+                }
+            ],
+            timeout=15
+        )
+        
+        if response and response.choices:
+            content = response.choices[0].message.content
+            print_result(True, f"视觉模型测试成功 - {content[:50]}...")
+        else:
+            print_result(False, "视觉模型返回了空响应")
+            return False
+            
+    except Exception as e:
+        print_result(False, f"视觉模型测试失败: {e}")
+        if "401" in str(e) or "authentication" in str(e).lower():
+            print("  提示: API Key 可能无效或已过期")
+        elif "model" in str(e).lower():
+            print("  提示: 模型名称可能不正确，请检查是否为 glm-4v-flash")
+        elif "quota" in str(e).lower() or "balance" in str(e).lower():
+            print("  提示: API 配额可能已用完")
+        return False
+    
+    print("\n  💡 提示: 如果所有测试都通过，说明 API 配置正确")
+    print("  💡 免费模型额度有限，如果配额用完需要等待重置或充值")
+    
+    return True
+
 def test_scheduled_script():
     """测试定时执行脚本"""
     print_test_header("定时执行脚本检查")
@@ -396,6 +546,7 @@ def main():
         ("配置文件", test_config_files),
         ("日志模块", test_logger),
         ("AI服务模块", test_ai_service),
+        ("智谱AI API", test_zhipu_api),
         ("定时脚本", test_scheduled_script),
         ("依赖检查", test_dependencies),
     ]

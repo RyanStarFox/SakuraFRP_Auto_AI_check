@@ -12,6 +12,9 @@ state.json
 # 签到截图
 checkin.png
 
+# 验证码调试图片
+*.png
+
 # 日志目录
 logs/
 *.log

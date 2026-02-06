@@ -70,3 +70,37 @@ class CheckinLogger:
     def log_info(self, message):
         """记录一般信息"""
         self._write_log("INFO", message)
+    
+    def log_debug(self, message):
+        """记录调试信息"""
+        self._write_log("DEBUG", message)
+    
+    def log_page_url(self, url):
+        """记录页面URL"""
+        self._write_log("DEBUG", f"当前页面URL: {url}")
+    
+    def log_element_status(self, element_name, is_visible, details=""):
+        """记录元素状态"""
+        status = "可见" if is_visible else "不可见"
+        msg = f"元素 '{element_name}' 状态: {status}"
+        if details:
+            msg += f" ({details})"
+        self._write_log("DEBUG", msg)
+    
+    def log_captcha_step(self, step, details=""):
+        """记录验证码处理步骤"""
+        msg = f"验证码处理步骤 {step}"
+        if details:
+            msg += f": {details}"
+        self._write_log("DEBUG", msg)
+    
+    def log_wait_timeout(self, timeout_type, elapsed_time, max_time):
+        """记录等待超时信息"""
+        self._write_log("DEBUG", f"等待超时 - 类型: {timeout_type}, 已等待: {elapsed_time}秒, 最大等待: {max_time}秒")
+    
+    def log_exception(self, exception_type, exception_message, traceback_info=""):
+        """记录异常信息"""
+        msg = f"异常类型: {exception_type}, 错误信息: {exception_message}"
+        if traceback_info:
+            msg += f"\n堆栈信息: {traceback_info}"
+        self._write_log("ERROR", msg)
