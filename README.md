@@ -5,7 +5,7 @@
 > **功能亮点**：
 > - ✅ 智能验证码识别：支持**九宫格点选**和**滑块拖动**两种验证码
 > - ✅ 专业缺口识别：使用 [captcha-recognizer](https://github.com/chenwei-zhao/captcha-recognizer) 深度学习库，识别准确率高达 96%+
-> - ✅ 人性化拖动：使用 PyAutoGUI 缓动函数，模拟真实人类操作轨迹（先加速后减速、随机抖动、超调回调）
+> - ✅ 人性化拖动：使用 pytweening 缓动函数，模拟真实人类操作轨迹（先加速后减速、随机抖动、超调回调）
 > - ✅ 自动截图调试：保存验证码图片和拖动前后截图，方便问题排查
 > - ✅ 详细日志记录：每日独立日志文件，记录完整操作流程
 
@@ -290,7 +290,7 @@ crontab -e
   - `python-dotenv>=1.0.0` - 环境变量管理
   - `numpy>=1.24.0` - 数值计算（用于图像处理）
   - `captcha-recognizer>=1.0.2` - 专业滑块验证码识别库
-  - `pyautogui>=0.9.54` - GUI自动化（提供缓动函数）
+  - `pytweening>=1.2.0` - 缓动函数库（无GUI依赖）
 - Linux系统需要安装cron（通常已预装）
 - （可选）推荐使用 [uv](https://github.com/astral-sh/uv) 进行依赖管理，速度更快
 
@@ -326,7 +326,7 @@ crontab -e
    - 网络/地区问题可能导致访问异常，可稍后再试。
 
 5. **出现滑块但始终无法通过**
-   - 程序已使用专业的 `captcha-recognizer` 库和 PyAutoGUI 缓动函数，识别准确率很高；
+   - 程序已使用专业的 `captcha-recognizer` 库和 pytweening 缓动函数，识别准确率很高；
    - 查看调试截图（`captcha_bg.png`、`slider_before_drag.png`、`slider_after_drag.png`）确认拖动位置；
    - 如果缺口识别准确但仍失败，可能是风控策略调整；
    - 可适当增加重试次数，或更换执行时间段；
@@ -335,7 +335,7 @@ crontab -e
 5.1. **验证码识别相关**
    - **九宫格验证码**：使用智谱AI视觉模型识别目标物体并点击对应格子；
    - **滑块验证码**：使用 `captcha-recognizer` 深度学习库识别缺口位置（准确率 96%+）；
-   - **拖动轨迹**：使用 PyAutoGUI 缓动函数模拟真实人类操作：
+   - **拖动轨迹**：使用 pytweening 缓动函数模拟真实人类操作：
      - 随机选择缓动函数（easeInOutQuad、easeOutQuad、easeInOutCubic）
      - 加入 ±5px 随机误差
      - 水平和垂直抖动（±1.5px、±2px）
@@ -518,12 +518,12 @@ python test.py
   1. 截取验证码背景图和滑块图
   2. 使用 Slider 模型识别缺口位置（准确率 96%+）
   3. 计算滑块需要拖动的距离
-  4. 使用 PyAutoGUI 缓动函数模拟人类拖动轨迹
+  4. 使用 pytweening 缓动函数模拟人类拖动轨迹
   5. 等待验证结果
 
 ### 9.2 人性化拖动技术
 
-使用 **PyAutoGUI 缓动函数** 模拟真实人类操作，避免被识别为机器人：
+使用 **pytweening 缓动函数** 模拟真实人类操作，避免被识别为机器人：
 
 #### **缓动函数（Easing Functions）**
 随机选择以下缓动函数之一：
@@ -592,7 +592,7 @@ python test.py
 
 - **智谱AI（ZhipuAI）**：视觉模型识别九宫格验证码
 - **captcha-recognizer**：深度学习识别滑块缺口（基于 YOLOv5）
-- **PyAutoGUI**：提供专业的缓动函数
+- **pytweening**：提供专业的缓动函数（无GUI依赖，适合服务器环境）
 - **Playwright**：浏览器自动化和元素定位
 - **Pillow + NumPy**：图像处理和数据转换
 

@@ -11,7 +11,7 @@ from PIL import Image
 from playwright.sync_api import sync_playwright
 from ai_service import AIService
 from logger import CheckinLogger
-import pyautogui  # 用于缓动函数
+import pytweening  # 用于缓动函数（无GUI依赖）
 
 # 强制 Windows 终端使用 UTF-8 编码
 if sys.platform == 'win32':
@@ -864,21 +864,21 @@ def solve_geetest_slider(page, ai_service, logger=None):
         page.mouse.down()
         time.sleep(random.uniform(0.1, 0.2))
         
-        # 模拟人类拖动轨迹（使用 PyAutoGUI 缓动函数）
+        # 模拟人类拖动轨迹（使用 pytweening 缓动函数）
         steps = random.randint(20, 30)  # 增加步数，轨迹更平滑
         
         # 随机选择一个缓动函数，模拟不同人的操作习惯
         easing_functions = [
-            pyautogui.easeInOutQuad,    # 先加速后减速（最常见）
-            pyautogui.easeOutQuad,      # 快速启动，逐渐减速
-            pyautogui.easeInOutCubic,   # 更平滑的加速减速
+            pytweening.easeInOutQuad,    # 先加速后减速（最常见）
+            pytweening.easeOutQuad,      # 快速启动，逐渐减速
+            pytweening.easeInOutCubic,   # 更平滑的加速减速
         ]
         easing_func = random.choice(easing_functions)
         
         print(f"[DEBUG] 使用缓动函数: {easing_func.__name__}, 步数: {steps}")
         
         for i in range(steps):
-            # 使用 PyAutoGUI 的缓动函数计算进度
+            # 使用 pytweening 的缓动函数计算进度
             progress = easing_func(i / steps)
             
             # 添加随机抖动（水平和垂直）
