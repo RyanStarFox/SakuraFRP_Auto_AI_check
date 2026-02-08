@@ -1016,7 +1016,20 @@ def main():
         return
 
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True, slow_mo=100)
+        # 从环境变量读取代理配置（可选）
+        proxy_url = os.getenv("HTTP_PROXY") or os.getenv("http_proxy")
+        
+        if proxy_url:
+            print(f"[INFO] 使用代理: {proxy_url}")
+            if logger:
+                logger.log_info(f"使用代理: {proxy_url}")
+            browser = p.chromium.launch(
+                headless=True, 
+                slow_mo=100,
+                proxy={"server": proxy_url}
+            )
+        else:
+            browser = p.chromium.launch(headless=True, slow_mo=100)
         context = browser.new_context(storage_state=STATE_FILE if STATE_FILE.exists() else None)
         page = context.new_page()
         page.set_viewport_size({"width": 1280, "height": 900})
